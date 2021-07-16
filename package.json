@@ -2,7 +2,8 @@
   "name": "api-transacoes-gabriel",
   "version": "1.0.0",
   "engines": {
-    "yarn": "1.22.10"
+    "yarn": "1.22.10",
+    "node": "14.16.1"
   },
   "main": "index.js",
   "license": "MIT",
