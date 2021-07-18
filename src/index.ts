@@ -16,6 +16,8 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
 
+app.listen(process.env.PORT || 3000);
+
 //Rotas
 app.get("/", (request: Request, response: Response) => {
   return response.send("Pagina Principal");
@@ -363,6 +365,5 @@ app.delete(
 
     return response.status(200).json(transaction);
   }
-);
+  );
 
-app.listen(process.env.PORT || 3000);
