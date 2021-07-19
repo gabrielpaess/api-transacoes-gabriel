@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = __importDefault(require("express"));
+var transaction_1 = __importDefault(require("./classes/transaction"));
 var user_1 = __importDefault(require("./classes/user"));
 var cors_1 = __importDefault(require("cors"));
 var md_validar_1 = require("./middlewares/md-validar");
@@ -12,12 +13,19 @@ var app = express_1.default();
 app.use(cors_1.default());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
+app.listen(process.env.PORT || 3000);
 app.get("/", function (request, response) {
     return response.send("Pagina Principal");
 });
 app.post("/users", md_validar_1.validarNome, md_validar_1.validarCpf, md_validar_1.validarEmail, md_validar_1.validarAge, function (request, response) {
     var _a = request.body, name = _a.name, cpf = _a.cpf, email = _a.email, age = _a.age;
     var user = new user_1.default(name, cpf, email, age);
+    var existe = data_1.usersArray.find(function (f) {
+        return f.cpf === cpf;
+    });
+    if (existe) {
+        return response.status(400).json("CPF já Cadastrado");
+    }
     data_1.usersArray.push(user);
     return response.status(200).json({ msg: "Cadastrado com sucesso" });
 });
@@ -25,6 +33,11 @@ app.get("/users/:userId", md_validar_1.validarUser, function (request, response)
     var userId = request.params.userId;
     var idInt = parseInt(userId);
     var user = data_1.usersArray.find(function (f) { return f.id === idInt; });
+    if (!user) {
+        return response.status(404).json({
+            msg: "Usuário não encontrado",
+        });
+    }
     var resposta1 = response.json({
         user: user,
     });
@@ -59,6 +72,11 @@ app.delete("/users/:userId", md_validar_1.validarUser, function (request, respon
     var indice = data_1.usersArray.findIndex(function (f) {
         return f.id === idInt;
     });
+    if (indice === -1) {
+        return response.status(404).json({
+            msg: "Usuário não encontrado",
+        });
+    }
     var user = data_1.usersArray.splice(indice, 1);
     return response.status(200).json(user);
 });
@@ -82,6 +100,7 @@ app.post("/user/:userId/transactions", md_validar_1.validarUser, function (reque
             msg: "User not found",
         });
     }
+    user.transactions.push(new transaction_1.default(title, value, typeLowerCase));
     user.adicionarTransacao(title, value, typeLowerCase);
     return response.status(200).json(user);
 });
@@ -93,6 +112,11 @@ app.get("/user/:userId/transactions/:id", md_validar_1.validarUser, md_validar_1
         return f.id === userIdInt;
     });
     var transactions = data_1.usersArray[indiceUser].transactions.find(function (f) { return f.id === idInt; });
+    if (!transactions) {
+        return response.status(404).json({
+            msg: "Transactions not found",
+        });
+    }
     return response.status(200).json(transactions);
 });
 app.get("/user/:userId/transactions", md_validar_1.validarUser, function (request, response) {
@@ -101,6 +125,11 @@ app.get("/user/:userId/transactions", md_validar_1.validarUser, function (reques
     var indiceUser = data_1.usersArray.findIndex(function (f) {
         return f.id === userIdInt;
     });
+    if (indiceUser === -1) {
+        return response.status(404).json({
+            msg: "User not found",
+        });
+    }
     var transactions = data_1.usersArray[indiceUser].allTransactions();
     var total = 0;
     var totalIncome = 0;
@@ -171,4 +200,3 @@ app.delete("/user/:userId/transactions/:id", md_validar_1.validarUser, md_valida
     var transaction = userTransactions.splice(transactionIndex, 1);
     return response.status(200).json(transaction);
 });
-app.listen(process.env.PORT || 3000);
